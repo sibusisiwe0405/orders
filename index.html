@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waiting for orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  :root{
+    --ink:      #1C1A17;
+    --espresso: #3B2E24;
+    --mocha:    #7A6552;
+    --taupe:    #B7A797;
+    --line:     #D8CFC0;
+    --cream:    #F6F2EA;
+    --cream-dp: #EDE6D8;
+    --paper:    #FFFDF8;
+  }
+
+  html,body{ height:100%; }
+
+  body{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    color:var(--cream);
+    position:relative;
+    isolation:isolate;
+    background:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:-6%;
+    z-index:-1;
+    background:
+      linear-gradient(rgba(28,26,23,.3), rgba(28,26,23,.3)),
+      url("../Tabletops4.png") center / cover no-repeat;
+  }
+
+  .stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(30px, 6vh, 46px);
+    padding:24px;
+  }
+
+  .invitation-heading{
+    font-family:'cormorant garamond', Georgia, serif;
+    font-style:italic;
+    font-size:clamp(1.7rem, 6vw, 2.4rem);
+    letter-spacing:.04em;
+    color:var(--cream);
+    text-align:center;
+    text-shadow:0 2px 8px rgba(0,0,0,.7);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .stage.open .invitation-heading{
+    opacity:0;
+    transform:translateY(-14px);
+    pointer-events:none;
+  }
+
+  /* ---------- Envelope ---------- */
+  .bounce{
+    animation:envelope-bounce 1.6s cubic-bezier(.28,.84,.42,1) infinite;
+    transform-origin:50% 100%;
+  }
+  .stage.open .bounce{ animation:none; }
+
+  @keyframes envelope-bounce{
+    0%   { transform:translateY(0)     scale(1,1); }
+    18%  { transform:translateY(0)     scale(1.05,.93); }
+    45%  { transform:translateY(-24px) scale(.97,1.04); }
+    72%  { transform:translateY(0)     scale(1.04,.95); }
+    86%  { transform:translateY(-5px)  scale(1,1); }
+    100% { transform:translateY(0)     scale(1,1); }
+  }
+
+  .envelope{
+    --w: min(78vw, 350px);
+    position:relative;
+    width:var(--w);
+    height:calc(var(--w) * .68);
+    border:none;
+    background:none;
+    cursor:pointer;
+    perspective:900px;
+    display:block;
+    font:inherit;
+    color:inherit;
+  }
+  .envelope:focus-visible{ outline:2px solid var(--cream); outline-offset:12px; }
+
+  /* inner liner: espresso + cream stripes, like the wedding schedule panel */
+  .env-back{
+    position:absolute; inset:1px;
+    background:repeating-linear-gradient(90deg, var(--espresso) 0 9px, var(--cream-dp) 9px 18px);
+    box-shadow:0 26px 40px -12px rgba(0,0,0,.65);
+    z-index:0;
+  }
+
+  /* pocket: rectangle with a V cut out of the top */
+  .env-front{
+    position:absolute; inset:0;
+    background:var(--cream);
+    clip-path:polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%);
+    z-index:3;
+  }
+  .env-front::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(165deg, rgba(255,255,255,.7), transparent 45%, rgba(122,101,82,.08));
+  }
+
+  .env-flap{
+    position:absolute; left:0; right:0; top:0;
+    height:56%;
+    background:var(--cream-dp);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:50% 0;
+    z-index:4;
+    transition:transform .6s cubic-bezier(.3,.7,.2,1), z-index 0s .3s;
+  }
+  .env-flap::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(255,255,255,.55), transparent 70%);
+  }
+  .stage.open .env-flap{
+    transform:rotateX(180deg);
+    z-index:1;
+  }
+
+  /* wax seal */
+  .seal{
+    position:absolute;
+    left:50%; top:54%;
+    width:19%;
+    aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #5a4637, var(--espresso) 70%);
+    box-shadow:0 4px 8px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.08), inset 0 0 0 6px rgba(0,0,0,.18);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--cream-dp);
+    font-family:'Mrs Saint Delafield', cursive;
+    font-size:calc(var(--w) * .105);
+    line-height:1;
+    transition:opacity .2s ease, transform .3s ease;
+  }
+  .seal span{ transform:translateY(-6%); }
+  .stage.open .seal{ opacity:0; transform:translate(-50%,-50%) scale(.6); }
+
+  /* ---------- Note (invitation card) ---------- */
+  .note{
+    position:absolute;
+    left:7%; width:86%;
+    top:6%;
+    height:92%;
+    background:var(--paper);
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+    z-index:2;
+    transform:translateY(0);
+    transition:transform .75s cubic-bezier(.3,1.25,.5,1) .38s, z-index 0s .8s;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:clamp(22px, 6vw, 30px) 14px 0;
+    text-align:center;
+  }
+  .note::before{
+    content:"";
+    position:absolute; inset:7px;
+    border:1px solid var(--line);
+    pointer-events:none;
+  }
+  .stage.open .note{
+    transform:translateY(-82%);
+    z-index:6;
+  }
+
+  .note .orn{
+    width:34px; height:1px;
+    background:var(--taupe);
+    position:relative;
+    margin-bottom:clamp(8px, 2.4vw, 12px);
+  }
+  .note .orn::after{
+    content:"";
+    position:absolute; left:50%; top:50%;
+    width:6px; height:6px;
+    background:var(--taupe);
+    transform:translate(-50%,-50%) rotate(45deg);
+  }
+
+  .note p{
+    font-family:'Mrs Saint Delafield', cursive;
+    font-size:clamp(2.7rem, 12.5vw, 3.9rem);
+    line-height:.92;
+    color:var(--ink);
+  }
+  .dots{ font-family:'Cormorant Garamond', Georgia, serif; font-size:.7em; }
+  .dots span{
+    display:inline-block;
+    animation:dot 1.2s infinite;
+  }
+  .dots span:nth-child(2){ animation-delay:.2s; }
+  .dots span:nth-child(3){ animation-delay:.4s; }
+  @keyframes dot{
+    0%,60%,100%{ opacity:.2; transform:translateY(0); }
+    30%        { opacity:1;  transform:translateY(-5px); }
+  }
+
+  .env-wrap{ transition:margin-top .75s cubic-bezier(.3,1,.4,1); }
+  .stage.open .env-wrap{ margin-top:clamp(80px, 20vw, 120px); }
+
+  .hint{
+    font-style:italic;
+    letter-spacing:.1em;
+    font-size:.95rem;
+    color:var(--taupe);
+    opacity:0;
+    transition:opacity .4s ease 1s;
+    height:1.2em;
+  }
+  .stage.open .hint{ opacity:1; }
+
+  @media (prefers-reduced-motion: reduce){
+    .bounce{ animation:none; }
+    .dots span{ animation:none; opacity:1; }
+    .env-flap, .note, .env-wrap{ transition-duration:.01ms; transition-delay:0s; }
+  }
+</style>
+</head>
+<body>
+
+<main class="stage" id="stage">
+  <h1 class="invitation-heading">You have been invited...</h1>
+
+  <div class="env-wrap">
+    <div class="bounce">
+      <button class="envelope" id="envelope" type="button" aria-expanded="false" aria-label="Open the envelope">
+        <span class="env-back"></span>
+
+        <span class="note" aria-live="polite">
+          <span class="orn" aria-hidden="true"></span>
+          <p>waiting<br>for orders :)<span class="dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></p>
+        </span>
+
+        <span class="env-front"></span>
+        <span class="env-flap"></span>
+
+        <span class="seal" aria-hidden="true"><span>&amp;</span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="hint" aria-hidden="true">tap to close</div>
+</main>
+
+<script>
+  const stage = document.getElementById('stage');
+  const envelope = document.getElementById('envelope');
+
+  function toggle(){
+    const isOpen = stage.classList.toggle('open');
+    envelope.setAttribute('aria-expanded', String(isOpen));
+    envelope.setAttribute('aria-label', isOpen ? 'Close the envelope' : 'Open the envelope');
+  }
+  envelope.addEventListener('click', toggle);
+</script>
+
+</body>
+</html>
